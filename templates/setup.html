@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Setup - Shongkha</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#030712] text-white min-h-screen flex items-center justify-center p-6">
+
+  <div class="w-full max-w-xl">
+
+    <!-- Back Button -->
+    <button onclick="goHome()" class="mb-6 text-slate-400 hover:text-white">
+      ← Back
+    </button>
+
+    <!-- Main Box -->
+    <div class="bg-white/10 backdrop-blur-md p-8 rounded-2xl">
+
+      <h2 class="text-3xl font-black mb-2 text-blue-400">
+        Parameters
+      </h2>
+
+      <p class="text-slate-500 mb-6 text-sm">
+        Define your game difficulty
+      </p>
+
+      <!-- Difficulty Buttons -->
+      <div class="space-y-3">
+
+        <button onclick="selectDifficulty('easy')" id="easy"
+          class="w-full p-4 rounded-xl bg-white/5 hover:bg-white/10">
+          Easy
+        </button>
+
+        <button onclick="selectDifficulty('medium')" id="medium"
+          class="w-full p-4 rounded-xl bg-blue-600">
+          Medium
+        </button>
+
+        <button onclick="selectDifficulty('hard')" id="hard"
+          class="w-full p-4 rounded-xl bg-white/5 hover:bg-white/10">
+          Hard
+        </button>
+
+      </div>
+
+      <!-- Start Button -->
+      <button onclick="startGame()"
+        class="w-full mt-6 bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-bold">
+        Launch Session
+      </button>
+
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+
+</body>
+</html>
