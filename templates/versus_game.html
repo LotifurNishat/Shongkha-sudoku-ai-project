@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Versus Duel – Shongkha</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+  <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-[#030712] text-white">
+  <div class="flex flex-col min-h-screen">
+    <header class="h-16 glass flex items-center justify-between px-4 md:px-8 z-20 sticky top-0">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black">S</div>
+        <h1 class="text-lg font-black tracking-tighter neon-text">SHONGKHA VERSUS</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-center">
+          <div class="text-[8px] uppercase opacity-50">Your Time</div>
+          <div id="timer-display" class="text-xl font-mono">0:00</div>
+        </div>
+        <div id="turn-indicator" class="text-xs bg-blue-600/30 px-4 py-1 rounded-full">Player 1's Turn</div>
+        <button id="menu-btn" class="px-3 py-1 rounded-full border border-white/10 hover:bg-white/5 text-[10px] font-black tracking-wider transition-all">MENU</button>
+      </div>
+    </header>
+
+    <main class="flex-grow flex flex-col lg:flex-row gap-6 p-4 md:p-8 relative">
+      <section class="flex-[3] flex flex-col gap-6">
+        <div class="flex justify-center">
+          <div id="sudoku-grid" class="grid grid-cols-9 w-full max-w-[550px] aspect-square bg-[#050B18] p-1 rounded-xl border-[3px] border-blue-600"></div>
+        </div>
+        <div id="ai-panel" class="glass rounded-2xl p-6">
+          <div class="flex items-start gap-5">
+            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
+            <div class="flex-grow">
+              <h4 class="text-xs font-black uppercase tracking-[0.2em] text-blue-400">Shongkha AI</h4>
+              <div id="ai-message" class="text-slate-200 text-lg font-medium leading-relaxed">Waiting for your move...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right column: Stats and controls -->
+      <aside class="flex-1 flex flex-col gap-6 lg:max-w-xs">
+      <!-- Number Pad – moves to top on mobile -->
+      <div class="glass rounded-2xl p-6 order-first lg:order-last">
+        <h3 class="text-[10px] uppercase tracking-[0.3em] font-black opacity-30 mb-4">Input Pad</h3>
+        <div id="num-pad" class="grid grid-cols-5 gap-2"></div>
+      </div>
+
+      <!-- Current Player Info -->
+      <div class="glass rounded-2xl p-4">
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-xs font-black uppercase tracking-wider">You: <span id="current-player-name">Player 1</span></span>
+          <span class="text-xs text-blue-400">Your Turn</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-white/5 p-2 rounded-lg text-center">
+            <div class="text-[8px] opacity-50">Mistakes</div>
+            <div class="text-lg font-black text-red-400"><span id="mistakes-count">0</span></div>
+          </div>
+          <div class="bg-white/5 p-2 rounded-lg text-center">
+            <div class="text-[8px] opacity-50">Hints</div>
+            <div class="text-lg font-black text-yellow-400"><span id="hints-count">0</span></div>
+          </div>
+          <div class="bg-white/5 p-2 rounded-lg text-center">
+            <div class="text-[8px] opacity-50">Empty</div>
+            <div class="text-lg font-black text-orange-400"><span id="unsolved-count">0</span></div>
+          </div>
+        </div>
+        <div class="mt-2 text-center bg-white/5 p-2 rounded-lg">
+          <div class="text-[8px] opacity-50">Current Penalty</div>
+          <div class="text-lg font-black text-blue-400" id="current-penalty">0</div>
+        </div>
+      </div>
+
+      <!-- Opponent Info -->
+      <div class="glass rounded-2xl p-4">
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-xs font-black uppercase tracking-wider">Opponent: <span id="opponent-name">Player 2</span></span>
+          <span class="text-xs text-slate-400">Status: <span id="opponent-status">Not played yet</span></span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-white/5 p-2 rounded-lg text-center">
+            <div class="text-[8px] opacity-50">Mistakes</div>
+            <div class="text-md font-black text-red-400/70"><span id="opponent-mistakes">-</span></div>
+          </div>
+          <div class="bg-white/5 p-2 rounded-lg text-center">
+            <div class="text-[8px] opacity-50">Hints</div>
+            <div class="text-md font-black text-yellow-400/70"><span id="opponent-hints">-</span></div>
+          </div>
+          <div class="bg-white/5 p-2 rounded-lg text-center">
+            <div class="text-[8px] opacity-50">Empty</div>
+            <div class="text-md font-black text-orange-400/70"><span id="opponent-empty">-</span></div>
+          </div>
+        </div>
+        <div class="mt-2 text-center">
+          <div class="text-[10px] opacity-50">Penalty (lower wins)</div>
+          <div class="text-xl font-black font-mono"><span id="opponent-penalty">-</span></div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="glass rounded-2xl p-6 space-y-4">
+        <button id="ai-hint-btn" class="w-full py-3 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase glow-btn">💡 AI HINT</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="undo-btn" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase">↩️ Undo</button>
+          <button id="reset-btn" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase">⟳ Reset</button>
+        </div>
+        <button id="submit-btn" class="w-full py-4 bg-green-600 hover:bg-green-500 rounded-xl font-black uppercase tracking-wider">Finish My Turn</button>
+      </div>
+    </aside>
+    </main>
+  </div>
+
+  <!-- Winner Modal -->
+  <div id="winner-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#050B18]/90 backdrop-blur-sm p-4">
+    <div class="bg-white/10 border border-white/20 p-8 rounded-[3rem] max-w-md w-full text-center shadow-[0_0_100px_rgba(59,130,246,0.3)]">
+      <div id="winner-icon" class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"></div>
+      <h2 id="winner-title" class="text-4xl font-black mb-2">VICTORY!</h2>
+      <p id="winner-message" class="text-slate-400 mb-6"></p>
+      <div id="score-details" class="space-y-3 text-sm mb-8"></div>
+      <button id="winner-home-btn" class="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-black uppercase tracking-wider">RETURN HOME</button>
+    </div>
+  </div>
+
+  <script src="/static/js/versus.js"></script>
+</body>
+</html>

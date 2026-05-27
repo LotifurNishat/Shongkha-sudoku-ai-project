@@ -1,71 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Game - Shongkha</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Shongkha – Neural Sudoku</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+  <link href="/static/css/style.css" rel="stylesheet">
 </head>
+<body class="bg-[#030712] text-white overflow-hidden">
+  <div class="flex flex-col h-screen">
+    <!-- Radial background -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#1e3a8a_0%,transparent_50%)] opacity-20 pointer-events-none"></div>
 
-<body class="bg-[#030712] text-white min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="h-16 md:h-20 glass flex items-center justify-between px-4 md:px-8 z-20 sticky top-0 border-t-0 border-x-0 shrink-0">
+      <div class="flex items-center gap-2 md:gap-4 font-sans leading-none">
+        <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-lg md:rounded-xl flex items-center justify-center font-black text-lg md:text-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)]">S</div>
+        <h1 class="text-lg md:text-2xl font-black tracking-tighter neon-text uppercase leading-none">SHONGKHA</h1>
+      </div>
+      <div class="flex items-center gap-4 md:gap-12">
+        <div class="text-center">
+          <div class="text-[8px] md:text-[10px] uppercase opacity-50 tracking-[0.2em] mb-0.5 md:mb-1">Time</div>
+          <div class="text-lg md:text-2xl font-mono text-white md:tracking-widest leading-none" id="timer-display">0:00</div>
+        </div>
+        <div class="w-32 md:w-56 hidden sm:block">
+          <div class="flex justify-between text-[8px] md:text-[10px] uppercase opacity-50 tracking-[0.2em] mb-1">
+            <span>Progress</span>
+            <span class="text-blue-400" id="progress-percent">0%</span>
+          </div>
+          <div class="h-1 md:h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+            <div id="progress-bar" class="h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 md:gap-6 shrink-0">
+        <div id="difficulty-badge" class="px-2 md:px-5 py-1 rounded-full border text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.3em] border-blue-500/30 text-blue-400">medium</div>
+        <button id="menu-btn" class="px-3 md:px-5 py-1 rounded-full border border-white/10 hover:bg-white/5 text-[8px] md:text-[10px] font-black tracking-[0.15em] transition-all">MENU</button>
+      </div>
+    </header>
 
-<!-- HEADER -->
-<header class="flex justify-between items-center px-6 py-4 border-b border-white/10">
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col lg:flex-row gap-6 p-4 md:p-8 relative z-10 overflow-y-auto lg:overflow-hidden">
+      <section class="flex-[3] flex flex-col gap-6 min-w-0">
+        <div class="flex items-center justify-center bg-black/20 p-2 md:p-4 rounded-2xl border border-white/5 backdrop-blur-sm shrink-0">
+          <div id="sudoku-grid" class="grid grid-cols-9 w-full max-w-[550px] aspect-square bg-[#050B18] p-1 rounded-xl shadow-[0_0_50px_rgba(30,58,138,0.3)] border-[3px] border-blue-600 mx-auto"></div>
+        </div>
+        
+        <!-- AI Panel with button container -->
+        <div id="ai-panel" class="w-full glass rounded-2xl p-6 relative overflow-hidden">
+          <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <svg class="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          </div>
+          <div class="flex items-start gap-5 h-full relative z-10">
+            <div class="flex-shrink-0 mt-1"><div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.4)]"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div></div>
+            <div class="flex-grow">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                <h4 class="text-xs font-black uppercase tracking-[0.2em] text-blue-400">Shongkha AI Intelligence</h4>
+                <span id="ai-typing-dots" class="hidden gap-1 ml-2"><span class="w-1 h-1 bg-blue-400 rounded-full animate-bounce"></span><span class="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]"></span><span class="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]"></span></span>
+              </div>
+              <div id="ai-message" class="text-slate-200 text-lg font-medium leading-relaxed min-h-[3rem]">Welcome Master. Click a cell and press a number key to start your journey.</div>
+              <!-- Action buttons container (for auto-solve home button) -->
+              <div id="ai-action-buttons" class="mt-4"></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <h1 class="text-xl font-black text-blue-500">SHONGKHA</h1>
+      <aside class="flex-1 flex flex-col gap-6 lg:max-w-xs shrink-0">
+        <div class="glass rounded-[2rem] p-6 space-y-6 flex flex-col">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white/5 p-3 rounded-xl border border-white/5">
+              <div class="text-[10px] opacity-40 uppercase tracking-widest mb-1 flex items-center gap-1.5"><svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> Mistakes</div>
+              <div class="text-xl font-black text-red-400 font-mono"><span id="mistakes-count">0</span> <span class="opacity-30 text-xs">/ 3</span></div>
+            </div>
+            <div class="bg-white/5 p-3 rounded-xl border border-white/5">
+              <div class="text-[10px] opacity-40 uppercase tracking-widest mb-1 flex items-center gap-1.5"><svg class="w-3 h-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg> Hints</div>
+              <div class="text-xl font-black text-blue-400 font-mono"><span id="hints-count">00</span></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-2">
+            <button id="ai-hint-btn" class="py-3.5 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] tracking-[0.2em] uppercase glow-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg> AI HINT</button>
+            <button id="auto-solve-btn" class="py-3.5 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] tracking-[0.2em] uppercase bg-blue-600 hover:bg-blue-500 shadow-lg text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 7h14M5 17h14M3 5h18M3 19h18"></path></svg> AUTO SOLVE</button>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pt-4 border-t border-white/5">
+            <button id="undo-btn" class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-white/5 hover:bg-white/10 text-[8px] font-black uppercase tracking-widest text-slate-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Undo</button>
+            <button id="reset-btn" class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-white/5 hover:bg-white/10 text-[8px] font-black uppercase tracking-widest text-slate-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Reset</button>
+            <button id="step-btn" class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-white/5 hover:bg-white/10 text-[8px] font-black uppercase tracking-widest text-slate-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Step</button>
+          </div>
+        </div>
+        
+        <!-- Neural Input Pad - Visible on all screens -->
+        <div class="glass rounded-[2rem] p-6 flex flex-col overflow-hidden order-first lg:order-last">
+          <h3 class="text-[10px] uppercase tracking-[0.3em] font-black opacity-30 mb-4 whitespace-nowrap">Neural Input Pad</h3>
+          <div id="num-pad" class="grid grid-cols-5 gap-2"></div>
+          <!-- No separate clear button – it's inside the pad as "C" -->
+        </div>
+      </aside>
+    </main>
 
-  <div class="text-sm">
-    Difficulty: <span id="difficultyText">medium</span>
-  </div>
+    <footer class="h-10 px-8 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.3em] opacity-20 z-20">
+      <span>Shongkha AI Engine v2.4.0</span>
+      <span>Neural Sudoku Solver Ready</span>
+    </footer>
 
-  <button onclick="goHome()" class="text-xs px-4 py-2 bg-white/10 rounded-lg">
-    MENU
-  </button>
+    <!-- Win Modal -->
+    <div id="win-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#050B18]/90 backdrop-blur-sm p-4">
+      <div class="bg-white/10 border border-white/20 p-12 rounded-[3rem] max-w-md w-full text-center shadow-[0_0_100px_rgba(59,130,246,0.3)]">
+        <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(34,197,94,0.5)]"><svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div>
+        <h2 class="text-5xl font-black mb-4">VICTORY</h2>
+        <p class="text-slate-400 mb-10 leading-relaxed font-light">The puzzle is complete. Your logical process was flawless.</p>
+        <div class="space-y-4">
+          <div class="flex justify-between text-sm uppercase tracking-widest text-slate-500"><span>Time</span><span id="win-time" class="text-white font-mono">0:00</span></div>
+          <div class="h-px bg-white/10 w-full"></div>
+          <div class="flex justify-between text-sm uppercase tracking-widest text-slate-500"><span>Hints</span><span id="win-hints" class="text-white font-mono">0</span></div>
+        </div>
+        <button id="win-home-btn" class="mt-12 w-full py-5 bg-white text-black font-black text-xl rounded-2xl transition-transform hover:scale-105 active:scale-95">RETURN HOME</button>
+      </div>
+    </div>
 
-</header>
-
-<!-- MAIN -->
-<div class="flex flex-1 p-6 gap-6">
-
-  <!-- GRID -->
-  <div class="flex-1 flex justify-center items-center">
-    <div id="board"
-         class="grid grid-cols-9 w-[400px] h-[400px] bg-[#050B18] border-2 border-blue-600">
+    <!-- Game Over Modal -->
+    <div id="gameover-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#050B18]/90 backdrop-blur-sm p-4">
+      <div class="bg-white/10 border border-red-500/30 p-12 rounded-[3rem] max-w-md w-full text-center shadow-[0_0_100px_rgba(239,68,68,0.3)]">
+        <div class="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(239,68,68,0.5)]"><svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>
+        <h2 class="text-5xl font-black mb-4">DEFEAT</h2>
+        <p class="text-slate-400 mb-10 leading-relaxed font-light">Too many mistakes. The neural network suggests more practice.</p>
+        <div class="space-y-4">
+          <div class="flex justify-between text-sm uppercase tracking-widest text-slate-500"><span>Time</span><span id="gameover-time" class="text-white font-mono">0:00</span></div>
+          <div class="h-px bg-white/10 w-full"></div>
+          <div class="flex justify-between text-sm uppercase tracking-widest text-slate-500"><span>Hints</span><span id="gameover-hints" class="text-white font-mono">0</span></div>
+        </div>
+        <button id="gameover-home-btn" class="mt-12 w-full py-5 bg-white text-black font-black text-xl rounded-2xl transition-transform hover:scale-105 active:scale-95">RETURN HOME</button>
+      </div>
     </div>
   </div>
 
-  <!-- SIDEBAR -->
-  <div class="w-64 space-y-4">
-
-    <div class="bg-white/10 p-4 rounded-xl">
-      <p class="text-xs opacity-50">Mistakes</p>
-      <p id="mistakes">0</p>
-    </div>
-
-    <div class="bg-white/10 p-4 rounded-xl">
-      <p class="text-xs opacity-50">Hints</p>
-      <p id="hints">0</p>
-    </div>
-
-    <button class="w-full bg-blue-600 p-3 rounded-xl">
-      AI Hint
-    </button>
-
-    <button onclick="autoSolve()" class="w-full bg-blue-500 p-3 rounded-xl hover:bg-blue-400 transition">
-      Auto Solve
-    </button>
-
-    <button class="w-full bg-white/10 p-3 rounded-xl">
-      Undo
-    </button>
-
-    <button class="w-full bg-white/10 p-3 rounded-xl">
-      Reset
-    </button>
-
-  </div>
-
-</div>
-
-<script src="/static/js/game.js"></script>
-
+  <script src="/static/js/game.js"></script>
 </body>
 </html>

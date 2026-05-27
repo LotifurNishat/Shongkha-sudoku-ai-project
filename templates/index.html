@@ -1,63 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Shongkha Sudoku</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shongkha – AI Sudoku</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/static/css/style.css" rel="stylesheet">
 </head>
-
 <body class="bg-[#030712] text-white overflow-hidden">
-
   <div class="flex flex-col items-center justify-center min-h-screen p-6 text-center relative">
+    <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-600/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-    <!-- Background decoration -->
-    <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-600/5 rounded-full blur-[100px]"></div>
-
-    <!-- Title Section -->
     <div class="mb-16 z-10">
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-8 text-[10px] font-black tracking-[0.3em] text-blue-400 uppercase bg-white/10 backdrop-blur-md rounded-full">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-8 text-[10px] font-black tracking-[0.3em] text-blue-400 uppercase glass rounded-full">
         <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
         Neural Engine Powered
       </div>
-
-      <h1 class="text-6xl md:text-[10rem] lg:text-[12rem] font-black tracking-tighter mb-4 uppercase leading-none text-blue-500">
-        SHONGKHA
-      </h1>
-
+      <h1 class="text-6xl md:text-[10rem] lg:text-[12rem] font-black tracking-tighter mb-4 neon-text uppercase leading-none">SHONGKHA</h1>
       <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-medium tracking-wide leading-relaxed opacity-70">
         Precision logic meets artificial intelligence. The ultimate Sudoku experience for the modern mind.
       </p>
     </div>
 
-    <!-- Buttons -->
     <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl px-4 z-10">
-
-      <!-- Start Button -->
-      <button onclick="goToSetup()" class="flex-1 flex flex-col items-center justify-center p-10 bg-blue-600 rounded-[2.5rem] shadow-lg hover:scale-105 transition">
-        <span class="text-4xl mb-4">▶</span>
-        <span class="text-2xl font-black uppercase tracking-widest mb-1">Enter Matrix</span>
-        <span class="text-blue-200 text-xs font-bold opacity-50 uppercase tracking-tighter">Start New Practicum</span>
-      </button>
-
-      <!-- Solve Button -->
-      <button onclick="goToSolve()" class="flex-1 flex flex-col items-center justify-center p-10 bg-white/10 backdrop-blur-md rounded-[2.5rem] hover:scale-105 transition">
-        <span class="text-4xl mb-4">⚙</span>
-        <span class="text-2xl font-black uppercase tracking-widest mb-1">Auto Solve</span>
-        <span class="text-slate-500 text-xs font-bold uppercase tracking-tighter">Neural Pattern Completion</span>
-      </button>
-
+      <a href="/setup" class="flex-1 group flex flex-col items-center justify-center p-10 bg-blue-600 rounded-[2.5rem] transition-all shadow-[0_20px_50px_rgba(59,130,246,0.3)] hover:shadow-blue-500/50 hover:scale-105 cursor-pointer">
+        <span class="text-4xl mb-6">🎮</span>
+        <span class="text-2xl font-black uppercase tracking-widest mb-1">Classic Mode</span>
+        <span class="text-blue-200 text-xs font-bold opacity-50 uppercase tracking-tighter">Traditional solo Sudoku</span>
+      </a>
+      <a href="/custom" class="flex-1 group flex flex-col items-center justify-center p-10 glass rounded-[2.5rem] transition-all hover:border-blue-500/50 hover:scale-105 cursor-pointer">
+        <span class="text-4xl mb-6">✎</span>
+        <span class="text-2xl font-black uppercase tracking-widest mb-1">Custom Board</span>
+        <span class="text-slate-500 text-xs font-bold uppercase tracking-tighter">Enter Your Own Puzzle</span>
+      </a>
+      <a href="/versus" class="flex-1 group flex flex-col items-center justify-center p-10 glass rounded-[2.5rem] transition-all hover:border-blue-500/50 hover:scale-105 cursor-pointer">
+      <span class="text-4xl mb-6">⚔️</span>
+      <span class="text-2xl font-black uppercase tracking-widest mb-1">Versus Mode</span>
+      <span class="text-slate-500 text-xs font-bold uppercase tracking-tighter">1v1 Duel</span>
+    </a>
     </div>
 
-    <!-- Footer -->
     <div class="mt-24 flex flex-wrap justify-center gap-10 text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] opacity-30">
-      <div>Zero Latency</div>
-      <div>Pro-Grade Logic</div>
-      <div>Visual Immersion</div>
+      <div class="flex items-center gap-3"><span class="text-blue-500">›</span> Zero Latency</div>
+      <div class="flex items-center gap-3"><span class="text-blue-500">›</span> Pro-Grade Logic</div>
+      <div class="flex items-center gap-3"><span class="text-blue-500">›</span> Visual Immersion</div>
     </div>
-
   </div>
-
-  <script src="/static/js/app.js"></script>
-
 </body>
 </html>

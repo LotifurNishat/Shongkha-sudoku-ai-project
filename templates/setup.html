@@ -1,60 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Setup - Shongkha</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup – Shongkha</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/static/css/style.css" rel="stylesheet">
 </head>
-
-<body class="bg-[#030712] text-white min-h-screen flex items-center justify-center p-6">
-
-  <div class="w-full max-w-xl">
-
-    <!-- Back Button -->
-    <button onclick="goHome()" class="mb-6 text-slate-400 hover:text-white">
-      ← Back
-    </button>
-
-    <!-- Main Box -->
-    <div class="bg-white/10 backdrop-blur-md p-8 rounded-2xl">
-
-      <h2 class="text-3xl font-black mb-2 text-blue-400">
-        Parameters
-      </h2>
-
-      <p class="text-slate-500 mb-6 text-sm">
-        Define your game difficulty
-      </p>
-
-      <!-- Difficulty Buttons -->
-      <div class="space-y-3">
-
-        <button onclick="selectDifficulty('easy')" id="easy"
-          class="w-full p-4 rounded-xl bg-white/5 hover:bg-white/10">
-          Easy
-        </button>
-
-        <button onclick="selectDifficulty('medium')" id="medium"
-          class="w-full p-4 rounded-xl bg-blue-600">
-          Medium
-        </button>
-
-        <button onclick="selectDifficulty('hard')" id="hard"
-          class="w-full p-4 rounded-xl bg-white/5 hover:bg-white/10">
-          Hard
-        </button>
-
+<body class="bg-[#030712] text-white">
+  <div class="flex items-center justify-center min-h-screen p-6 relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1e3a8a_0%,transparent_70%)] opacity-10 pointer-events-none"></div>
+    <div class="w-full max-w-xl z-10">
+      <a href="/" class="flex items-center gap-2 text-slate-500 hover:text-white mb-8 transition-all group font-black text-[10px] uppercase tracking-[0.3em]">
+        <span class="text-lg group-hover:-translate-x-1 transition-transform">←</span>
+        <span>Abort Mission</span>
+      </a>
+      <div class="glass rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 relative">
+        <div class="absolute top-0 right-0 p-8 opacity-5 hidden sm:block">
+          <svg class="w-24 h-24 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 7h14M5 17h14M3 5h18M3 19h18"></path></svg>
+        </div>
+        <h2 class="text-3xl md:text-5xl font-black mb-2 tracking-tighter uppercase neon-text">Parameters</h2>
+        <p class="text-slate-500 mb-8 md:mb-12 font-medium tracking-wide uppercase text-[9px] md:text-[10px]">Define your neural engagement settings.</p>
+        <div class="space-y-8 md:space-y-10">
+          <!-- Difficulty -->
+          <section>
+            <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-blue-400 mb-4 md:mb-6">Complexity Depth</h3>
+            <div class="grid grid-cols-1 gap-3 md:gap-4" id="difficulty-buttons">
+              <button data-diff="easy" class="difficulty-btn relative flex items-center justify-between p-4 md:p-6 rounded-[1.2rem] md:rounded-[1.5rem] border transition-all bg-white/5 border-white/5 hover:border-white/20">
+                <div class="text-left">
+                  <div class="font-black text-lg md:text-xl uppercase tracking-widest text-slate-500">Easy</div>
+                  <div class="text-[9px] md:text-[10px] font-bold text-slate-600 uppercase tracking-tighter mt-1">30-35 starting numbers</div>
+                </div>
+              </button>
+              <button data-diff="medium" class="difficulty-btn relative flex items-center justify-between p-4 md:p-6 rounded-[1.2rem] md:rounded-[1.5rem] border transition-all bg-blue-600/20 border-blue-500">
+                <div class="text-left">
+                  <div class="font-black text-lg md:text-xl uppercase tracking-widest text-white">Medium</div>
+                  <div class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">40-45 starting numbers</div>
+                </div>
+                <div class="check-mark w-6 h-6 md:w-8 md:h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                  <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </button>
+              <button data-diff="hard" class="difficulty-btn relative flex items-center justify-between p-4 md:p-6 rounded-[1.2rem] md:rounded-[1.5rem] border transition-all bg-white/5 border-white/5 hover:border-white/20">
+                <div class="text-left">
+                  <div class="font-black text-lg md:text-xl uppercase tracking-widest text-slate-500">Hard</div>
+                  <div class="text-[9px] md:text-[10px] font-bold text-slate-600 uppercase tracking-tighter mt-1">50-55 starting numbers</div>
+                </div>
+              </button>
+            </div>
+          </section>
+          <!-- Toggles -->
+          <section>
+            <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-blue-400 mb-4 md:mb-6">Subsystem Toggles</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button id="toggle-timer" class="toggle-btn flex items-center sm:flex-col justify-start sm:justify-center gap-4 p-5 sm:p-8 rounded-[1.2rem] sm:rounded-[1.5rem] border transition-all bg-white/5 border-white/20 text-white">
+                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-[9px] font-black uppercase tracking-widest">Chronometer</span>
+                <span class="toggle-status text-[8px] font-bold bg-green-500/20 px-2 py-0.5 rounded-full">ON</span>
+              </button>
+              <button id="toggle-mistakes" class="toggle-btn flex items-center sm:flex-col justify-start sm:justify-center gap-4 p-5 sm:p-8 rounded-[1.2rem] sm:rounded-[1.5rem] border transition-all bg-white/5 border-white/20 text-white">
+                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <span class="text-[9px] font-black uppercase tracking-widest">Feedback Sync</span>
+                <span class="toggle-status text-[8px] font-bold bg-green-500/20 px-2 py-0.5 rounded-full">ON</span>
+              </button>
+            </div>
+          </section>
+          <button id="launch-btn" class="w-full py-5 md:py-6 bg-blue-600 text-white font-black text-lg md:text-xl uppercase tracking-[0.2em] rounded-[1.2rem] md:rounded-[1.5rem] hover:bg-blue-500 transition-all shadow-[0_20px_40px_rgba(0,0,0,0.4)] border border-blue-400/30">
+            Launch Session
+          </button>
+        </div>
       </div>
-
-      <!-- Start Button -->
-      <button onclick="startGame()"
-        class="w-full mt-6 bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-bold">
-        Launch Session
-      </button>
-
     </div>
   </div>
+  <script>
+    // Difficulty selection
+    let selectedDifficulty = 'medium';
+    let timerEnabled = true;
+    let mistakesEnabled = true;
 
-  <script src="/static/js/app.js"></script>
-
+    const diffBtns = document.querySelectorAll('.difficulty-btn');
+    
+    function updateDifficultySelection(selectedBtn) {
+      diffBtns.forEach(btn => {
+        btn.classList.remove('bg-blue-600/20', 'border-blue-500');
+        btn.classList.add('bg-white/5', 'border-white/5');
+        const titleDiv = btn.querySelector('.text-left div:first-child');
+        titleDiv.classList.remove('text-white');
+        titleDiv.classList.add('text-slate-500');
+        const existingCheck = btn.querySelector('.check-mark');
+        if (existingCheck) existingCheck.remove();
+      });
+      selectedBtn.classList.remove('bg-white/5', 'border-white/5');
+      selectedBtn.classList.add('bg-blue-600/20', 'border-blue-500');
+      const titleDiv = selectedBtn.querySelector('.text-left div:first-child');
+      titleDiv.classList.remove('text-slate-500');
+      titleDiv.classList.add('text-white');
+      const checkMark = document.createElement('div');
+      checkMark.className = 'check-mark w-6 h-6 md:w-8 md:h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]';
+      checkMark.innerHTML = '<svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>';
+      selectedBtn.appendChild(checkMark);
+      selectedDifficulty = selectedBtn.getAttribute('data-diff');
+    }
+    
+    diffBtns.forEach(btn => {
+      btn.addEventListener('click', () => updateDifficultySelection(btn));
+    });
+    
+    // Toggle settings with visual status
+    function updateToggleUI(btn, isOn) {
+      const statusSpan = btn.querySelector('.toggle-status');
+      if (isOn) {
+        btn.classList.remove('bg-transparent', 'border-white/5', 'text-slate-600');
+        btn.classList.add('bg-white/5', 'border-white/20', 'text-white');
+        statusSpan.innerText = 'ON';
+        statusSpan.classList.remove('bg-red-500/20');
+        statusSpan.classList.add('bg-green-500/20');
+      } else {
+        btn.classList.remove('bg-white/5', 'border-white/20', 'text-white');
+        btn.classList.add('bg-transparent', 'border-white/5', 'text-slate-600');
+        statusSpan.innerText = 'OFF';
+        statusSpan.classList.remove('bg-green-500/20');
+        statusSpan.classList.add('bg-red-500/20');
+      }
+    }
+    
+    const timerBtn = document.getElementById('toggle-timer');
+    const mistakesBtn = document.getElementById('toggle-mistakes');
+    
+    timerBtn.addEventListener('click', () => {
+      timerEnabled = !timerEnabled;
+      updateToggleUI(timerBtn, timerEnabled);
+    });
+    
+    mistakesBtn.addEventListener('click', () => {
+      mistakesEnabled = !mistakesEnabled;
+      updateToggleUI(mistakesBtn, mistakesEnabled);
+    });
+    
+    // Initialize UI to match default states
+    updateToggleUI(timerBtn, timerEnabled);
+    updateToggleUI(mistakesBtn, mistakesEnabled);
+    
+    // Launch button
+    document.getElementById('launch-btn').addEventListener('click', () => {
+      const url = `/game?difficulty=${selectedDifficulty}&timer=${timerEnabled}&mistakes=${mistakesEnabled}`;
+      window.location.href = url;
+    });
+  </script>
 </body>
 </html>

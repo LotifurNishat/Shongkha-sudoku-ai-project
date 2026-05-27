@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Versus Mode – Shongkha</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/static/css/style.css" rel="stylesheet">
+  <style>
+    /* Force dropdown options to have light text on dark background */
+    select option {
+      background-color: #1e293b;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body class="bg-[#030712] text-white">
+  <div class="flex items-center justify-center min-h-screen p-6 relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1e3a8a_0%,transparent_70%)] opacity-10 pointer-events-none"></div>
+    <div class="w-full max-w-xl z-10">
+      <a href="/" class="flex items-center gap-2 text-slate-500 hover:text-white mb-8 transition-all group font-black text-[10px] uppercase tracking-[0.3em]">
+        <span class="text-lg group-hover:-translate-x-1 transition-transform">←</span>
+        <span>Back to Home</span>
+      </a>
+      <div class="glass rounded-[2rem] p-8 md:p-12 relative">
+        <h2 class="text-3xl md:text-5xl font-black mb-2 tracking-tighter uppercase neon-text">1v1 Duel</h2>
+        <p class="text-slate-500 mb-6 text-sm">Enter player names and select difficulty. Each player will solve the same puzzle separately.</p>
+        
+        <div class="space-y-6">
+          <div>
+            <label class="block text-xs font-black uppercase tracking-wider mb-2 text-blue-400">Player 1 Name</label>
+            <input type="text" id="player1" class="w-full bg-slate-800/80 border border-white/20 rounded-xl p-3 text-white placeholder-slate-400" placeholder="Enter name" value="Warrior">
+          </div>
+          <div>
+            <label class="block text-xs font-black uppercase tracking-wider mb-2 text-blue-400">Player 2 Name</label>
+            <input type="text" id="player2" class="w-full bg-slate-800/80 border border-white/20 rounded-xl p-3 text-white placeholder-slate-400" placeholder="Enter name" value="Challenger">
+          </div>
+          <div>
+            <label class="block text-xs font-black uppercase tracking-wider mb-2 text-blue-400">Difficulty</label>
+            <select id="difficulty" class="w-full bg-slate-800 border border-white/20 rounded-xl p-3 text-white">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <button id="start-btn" class="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-black uppercase tracking-wider transition">Start Duel</button>
+        </div>
+      </div>
+      <footer class="mt-8 text-center text-[8px] font-black uppercase tracking-[0.2em] opacity-40">
+        Developed by <span class="text-blue-400">Lotifur Nishat</span>
+      </footer>
+    </div>
+  </div>
+  <script>
+    document.getElementById('start-btn').addEventListener('click', async () => {
+      const player1 = document.getElementById('player1').value.trim() || "Player 1";
+      const player2 = document.getElementById('player2').value.trim() || "Player 2";
+      const difficulty = document.getElementById('difficulty').value;
+      const res = await fetch('/api/versus/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player1, player2, difficulty })
+      });
+      const data = await res.json();
+      if (data.game_id) {
+        window.location.href = `/versus/game?game_id=${data.game_id}&player=1`;
+      }
+    });
+  </script>
+</body>
+</html>
