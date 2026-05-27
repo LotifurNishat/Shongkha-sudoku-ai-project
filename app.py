@@ -10,8 +10,7 @@ from solver.hint import get_hint
 from utils.validation import is_valid_board
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
-
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
 # In-memory store for versus games
 versus_games = {}
 
