@@ -19,7 +19,7 @@
         <div class="absolute top-0 right-0 p-8 opacity-5 hidden sm:block">
           <svg class="w-24 h-24 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 7h14M5 17h14M3 5h18M3 19h18"></path></svg>
         </div>
-        <h2 class="text-3xl md:text-5xl font-black mb-2 tracking-tighter uppercase neon-text">Parameters</h2>
+        <h2 class="text-3xl md:text-5xl font-black mb-2 tracking-tighter uppercase neon-text">MISSION SETUP</h2>
         <p class="text-slate-500 mb-8 md:mb-12 font-medium tracking-wide uppercase text-[9px] md:text-[10px]">Define your neural engagement settings.</p>
         <div class="space-y-8 md:space-y-10">
           <!-- Difficulty -->
@@ -53,12 +53,12 @@
           <section>
             <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-blue-400 mb-4 md:mb-6">Subsystem Toggles</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button id="toggle-timer" class="toggle-btn flex items-center sm:flex-col justify-start sm:justify-center gap-4 p-5 sm:p-8 rounded-[1.2rem] sm:rounded-[1.5rem] border transition-all bg-white/5 border-white/20 text-white">
+              <button id="toggle-timer" disabled aria-disabled="true" class="toggle-btn flex items-center sm:flex-col justify-start sm:justify-center gap-4 p-5 sm:p-8 rounded-[1.2rem] sm:rounded-[1.5rem] border transition-all bg-white/5 border-white/20 text-white cursor-not-allowed">
                 <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span class="text-[9px] font-black uppercase tracking-widest">Chronometer</span>
                 <span class="toggle-status text-[8px] font-bold bg-green-500/20 px-2 py-0.5 rounded-full">ON</span>
               </button>
-              <button id="toggle-mistakes" class="toggle-btn flex items-center sm:flex-col justify-start sm:justify-center gap-4 p-5 sm:p-8 rounded-[1.2rem] sm:rounded-[1.5rem] border transition-all bg-white/5 border-white/20 text-white">
+              <button id="toggle-mistakes" disabled aria-disabled="true" class="toggle-btn flex items-center sm:flex-col justify-start sm:justify-center gap-4 p-5 sm:p-8 rounded-[1.2rem] sm:rounded-[1.5rem] border transition-all bg-white/5 border-white/20 text-white cursor-not-allowed">
                 <svg class="w-6 h-6 sm:w-8 sm:h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 <span class="text-[9px] font-black uppercase tracking-widest">Feedback Sync</span>
                 <span class="toggle-status text-[8px] font-bold bg-green-500/20 px-2 py-0.5 rounded-full">ON</span>
@@ -66,7 +66,7 @@
             </div>
           </section>
           <button id="launch-btn" class="w-full py-5 md:py-6 bg-blue-600 text-white font-black text-lg md:text-xl uppercase tracking-[0.2em] rounded-[1.2rem] md:rounded-[1.5rem] hover:bg-blue-500 transition-all shadow-[0_20px_40px_rgba(0,0,0,0.4)] border border-blue-400/30">
-            Launch Session
+            Start Mission
           </button>
         </div>
       </div>
@@ -127,15 +127,7 @@
     const timerBtn = document.getElementById('toggle-timer');
     const mistakesBtn = document.getElementById('toggle-mistakes');
     
-    timerBtn.addEventListener('click', () => {
-      timerEnabled = !timerEnabled;
-      updateToggleUI(timerBtn, timerEnabled);
-    });
-    
-    mistakesBtn.addEventListener('click', () => {
-      mistakesEnabled = !mistakesEnabled;
-      updateToggleUI(mistakesBtn, mistakesEnabled);
-    });
+    // Toggles are intentionally disabled — subsystems remain always ON.
     
     // Initialize UI to match default states
     updateToggleUI(timerBtn, timerEnabled);
@@ -143,7 +135,8 @@
     
     // Launch button
     document.getElementById('launch-btn').addEventListener('click', () => {
-      const url = `/game?difficulty=${selectedDifficulty}&timer=${timerEnabled}&mistakes=${mistakesEnabled}`;
+      // Force subsystems to ON regardless of UI (user cannot disable them)
+      const url = `/game?difficulty=${selectedDifficulty}&timer=true&mistakes=true`;
       window.location.href = url;
     });
   </script>

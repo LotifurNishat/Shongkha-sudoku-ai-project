@@ -27,11 +27,7 @@ const winHomeBtn = document.getElementById('win-home-btn');
 const gameOverHomeBtn = document.getElementById('gameover-home-btn');
 
 // ---------- Game State ----------
-let board = [];
-let initialBoard = [];
-let solvedBoard = [];
-let selectedCell = null;
-let history = [];
+let sudokuBoard = null;
 let mistakes = 0;
 let hintsUsed = 0;
 let timerSeconds = 0;
@@ -48,27 +44,31 @@ function formatTime(sec) {
 }
 
 function updateProgress() {
-  const filled = board.flat().filter(cell => cell !== null).length;
+  if (!sudokuBoard) return;
+  const filled = sudokuBoard.board.flat().filter(cell => cell !== null).length;
   const percent = Math.round((filled / 81) * 100);
-  progressPercent.innerText = `${percent}%`;
-  progressBar.style.width = `${percent}%`;
+  if (progressPercent) progressPercent.innerText = `${percent}%`;
+  if (progressBar) progressBar.style.width = `${percent}%`;
 }
 
 function updateMistakesUI() {
-  mistakesSpan.innerText = mistakes;
+  if (mistakesSpan) mistakesSpan.innerText = mistakes;
   if (settings.mistakes && mistakes >= 3 && !isGameWon && !isGameOver) {
     isGameOver = true;
     stopTimer();
-    gameOverTimeSpan.innerText = formatTime(timerSeconds);
-    gameOverHintsSpan.innerText = hintsUsed;
-    gameOverModal.classList.remove('hidden');
-    gameOverModal.classList.add('flex');
+    if (sudokuBoard) sudokuBoard.isReadOnly = true;
+    if (gameOverTimeSpan) gameOverTimeSpan.innerText = formatTime(timerSeconds);
+    if (gameOverHintsSpan) gameOverHintsSpan.innerText = hintsUsed;
+    if (gameOverModal) {
+      gameOverModal.classList.remove('hidden');
+      gameOverModal.classList.add('flex');
+    }
     aiMessageDiv.innerHTML = "GAME OVER: Too many mistakes.";
   }
 }
 
 function updateHintsUI() {
-  hintsSpan.innerText = hintsUsed.toString().padStart(2, '0');
+  if (hintsSpan) hintsSpan.innerText = hintsUsed.toString().padStart(2, '0');
 }
 
 function stopTimer() {
@@ -84,29 +84,34 @@ function startTimer() {
   timerInterval = setInterval(() => {
     if (!isGameWon && !isGameOver) {
       timerSeconds++;
-      timerDisplay.innerText = formatTime(timerSeconds);
+      if (timerDisplay) timerDisplay.innerText = formatTime(timerSeconds);
     }
   }, 1000);
 }
 
 function checkWin() {
-  if (isGameWon || isGameOver) return false;
+  if (isGameWon || isGameOver || !sudokuBoard) return false;
+  
   let allMatch = true;
   for (let i = 0; i < 9; i++) {
     for (let j = 0; j < 9; j++) {
-      if (board[i][j] !== solvedBoard[i][j]) {
+      if (sudokuBoard.board[i][j] !== sudokuBoard.solvedBoard[i][j]) {
         allMatch = false;
         break;
       }
     }
   }
+  
   if (allMatch) {
     isGameWon = true;
     stopTimer();
-    winTimeSpan.innerText = formatTime(timerSeconds);
-    winHintsSpan.innerText = hintsUsed;
-    winModal.classList.remove('hidden');
-    winModal.classList.add('flex');
+    sudokuBoard.isReadOnly = true;
+    if (winTimeSpan) winTimeSpan.innerText = formatTime(timerSeconds);
+    if (winHintsSpan) winHintsSpan.innerText = hintsUsed;
+    if (winModal) {
+      winModal.classList.remove('hidden');
+      winModal.classList.add('flex');
+    }
     canvasConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#3b82f6', '#ffffff', '#22c55e'] });
     aiMessageDiv.innerHTML = "Incredible. You have mastered the logic of numbers.";
     if (actionButtonsDiv) actionButtonsDiv.innerHTML = '';
@@ -125,56 +130,6 @@ function showWarningMessage(message, duration = 2000) {
       aiMessageDiv.innerHTML = "Click a cell and press a number key to continue.";
     }
   }, duration);
-}
-
-// Auto‑advance to the next empty cell (skipping fixed cells)
-function moveToNextEmptyCell() {
-  if (!selectedCell) return;
-  let [startRow, startCol] = selectedCell;
-  let startIndex = startRow * 9 + startCol;
-  for (let i = 1; i <= 81; i++) {
-    let index = (startIndex + i) % 81;
-    let r = Math.floor(index / 9);
-    let c = index % 9;
-    if (board[r][c] === null && initialBoard[r][c] === null) {
-      selectedCell = [r, c];
-      renderGrid();
-      return;
-    }
-  }
-  // No empty cell found; board may be full. Check win will handle.
-}
-
-function flashWrongCell(row, col, wrongValue, onComplete) {
-  const cellIndex = row * 9 + col;
-  const cellElement = gridContainer.children[cellIndex];
-  if (!cellElement) return;
-  const originalSpan = cellElement.querySelector('span');
-  if (originalSpan) {
-    originalSpan.innerText = wrongValue;
-    originalSpan.className = 'text-red-500 font-bold animate-shake';
-    cellElement.classList.add('bg-red-500/30');
-  }
-  setTimeout(() => {
-    board[row][col] = null;
-    renderGrid();
-    if (onComplete) onComplete();
-  }, 400);
-}
-
-function handleWrongEntry(row, col, wrongValue) {
-  if (!settings.mistakes) {
-    board[row][col] = null;
-    renderGrid();
-    // Do NOT advance on wrong entry
-    return;
-  }
-  mistakes++;
-  updateMistakesUI();
-  showWarningMessage(`Wrong! The correct number for (${row+1},${col+1}) is ${solvedBoard[row][col]}.`, 2500);
-  flashWrongCell(row, col, wrongValue, () => {
-    // After clearing wrong number, do NOT advance
-  });
 }
 
 // ---------- AI Panel Typing Effect ----------
@@ -206,32 +161,34 @@ function displayAIResponse(text, isAnalyzing = false) {
 async function fetchNewGame(difficulty) {
   const res = await fetch(`/api/new_game?difficulty=${difficulty}`);
   const data = await res.json();
-  board = data.board.map(row => row.map(v => v === 0 ? null : v));
-  initialBoard = data.initial.map(row => row.map(v => v === 0 ? null : v));
-  solvedBoard = data.solved.map(row => row.map(v => v === 0 ? null : v));
-  history = [];
+  
+  isGameWon = false;
+  isGameOver = false;
   mistakes = 0;
   hintsUsed = 0;
   timerSeconds = 0;
-  isGameWon = false;
-  isGameOver = false;
+  
+  sudokuBoard.isReadOnly = false;
+  sudokuBoard.setBoardData(data.board, data.initial, data.solved);
+  
   updateMistakesUI();
   updateHintsUI();
   updateProgress();
-  timerDisplay.innerText = formatTime(0);
+  if (timerDisplay) timerDisplay.innerText = formatTime(0);
+  
   if (settings.timer) startTimer();
   else stopTimer();
-  renderGrid();
+  
   aiMessageDiv.innerHTML = "Game ready. Click a cell and press a number key.";
   if (actionButtonsDiv) actionButtonsDiv.innerHTML = '';
 }
 
 async function getAIHint() {
-  if (isGameWon || isGameOver) return;
+  if (isGameWon || isGameOver || !sudokuBoard) return;
   const payload = {
-    board: board.map(row => row.map(v => v === null ? 0 : v)),
-    row: selectedCell ? selectedCell[0] : null,
-    col: selectedCell ? selectedCell[1] : null
+    board: sudokuBoard.getBoardData(),
+    row: sudokuBoard.selectedCell ? sudokuBoard.selectedCell[0] : null,
+    col: sudokuBoard.selectedCell ? sudokuBoard.selectedCell[1] : null
   };
   displayAIResponse("", true);
   try {
@@ -250,20 +207,18 @@ async function getAIHint() {
 }
 
 function autoSolve() {
-  if (isGameWon || isGameOver) return;
+  if (isGameWon || isGameOver || !sudokuBoard) return;
   
   if (!confirm("Auto-solve will complete the entire puzzle. Are you sure?")) {
     return;
   }
   
-  for (let i = 0; i < 9; i++) {
-    for (let j = 0; j < 9; j++) {
-      board[i][j] = solvedBoard[i][j];
-    }
-  }
-  renderGrid();
+  const solvedClone = sudokuBoard.solvedBoard.map(row => [...row]);
+  sudokuBoard.setBoardData(solvedClone, sudokuBoard.initialBoard, sudokuBoard.solvedBoard);
+  
   isGameWon = true;
   stopTimer();
+  sudokuBoard.isReadOnly = true;
   
   const funnyMessages = [
     "The neural network has taken control. Humanity had a good run.",
@@ -292,15 +247,16 @@ function autoSolve() {
 }
 
 function stepSolve() {
-  if (isGameWon || isGameOver) return;
+  if (isGameWon || isGameOver || !sudokuBoard) return;
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
-      if (board[r][c] === null) {
-        const correctVal = solvedBoard[r][c];
-        board[r][c] = correctVal;
-        renderGrid();
+      if (sudokuBoard.board[r][c] === null) {
+        const correctVal = sudokuBoard.solvedBoard[r][c];
+        sudokuBoard.board[r][c] = correctVal;
+        sudokuBoard.renderGrid();
         aiMessageDiv.innerHTML = `AI populated cell (${r+1}, ${c+1}) with ${correctVal}.`;
-        if (checkWin()) return;
+        updateProgress();
+        checkWin();
         return;
       }
     }
@@ -308,123 +264,40 @@ function stepSolve() {
 }
 
 function undo() {
-  if (isGameWon || isGameOver) return;
-  if (history.length === 0) return;
-  const last = history.pop();
-  board = last.map(row => [...row]);
-  renderGrid();
+  if (isGameWon || isGameOver || !sudokuBoard) return;
+  sudokuBoard.undo();
+  updateProgress();
   checkWin();
 }
 
 function resetGame() {
-  board = initialBoard.map(row => [...row]);
-  history = [];
+  if (!sudokuBoard) return;
+  
+  const initialClone = sudokuBoard.initialBoard.map(row => [...row]);
+  sudokuBoard.setBoardData(initialClone, sudokuBoard.initialBoard, sudokuBoard.solvedBoard);
+  sudokuBoard.history = [];
+  
   mistakes = 0;
   hintsUsed = 0;
   timerSeconds = 0;
   isGameWon = false;
   isGameOver = false;
+  sudokuBoard.isReadOnly = false;
+  
   updateMistakesUI();
   updateHintsUI();
-  timerDisplay.innerText = formatTime(0);
+  updateProgress();
+  if (timerDisplay) timerDisplay.innerText = formatTime(0);
+  
   if (settings.timer) {
     stopTimer();
     startTimer();
   }
-  renderGrid();
+  
   aiMessageDiv.innerHTML = "Board reset. Fresh logic required.";
-  winModal.classList.add('hidden');
-  gameOverModal.classList.add('hidden');
+  if (winModal) winModal.classList.add('hidden');
+  if (gameOverModal) gameOverModal.classList.add('hidden');
   if (actionButtonsDiv) actionButtonsDiv.innerHTML = '';
-}
-
-// ---------- Grid Rendering & Interaction ----------
-function renderGrid() {
-  gridContainer.innerHTML = '';
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      const value = board[r][c];
-      const isInitial = initialBoard[r][c] !== null;
-      const isSelected = selectedCell && selectedCell[0] === r && selectedCell[1] === c;
-      const isSameRegion = () => {
-        if (!selectedCell) return false;
-        const [sr, sc] = selectedCell;
-        if (r === sr || c === sc) return true;
-        return Math.floor(r/3) === Math.floor(sr/3) && Math.floor(c/3) === Math.floor(sc/3);
-      };
-      const related = isSameRegion();
-      
-      const cell = document.createElement('button');
-      cell.className = `relative flex items-center justify-center text-xl md:text-2xl font-bold transition-all duration-200 aspect-square
-        ${(r+1) % 3 === 0 && r !== 8 ? 'border-b-[3px] border-blue-600' : 'border-b border-white/10'}
-        ${(c+1) % 3 === 0 && c !== 8 ? 'border-r-[3px] border-blue-600' : 'border-r border-white/10'}
-        ${isSelected ? 'bg-blue-500/25 border-2 border-blue-400 z-10 shadow-[0_0_15px_rgba(59,130,246,0.4)] text-white' : 
-          related ? 'bg-blue-500/5 text-blue-200/40' : 'bg-transparent text-slate-300'}
-        ${isInitial ? 'bg-white/2 cursor-default' : 'font-medium'}
-        hover:bg-blue-500/10`;
-      
-      const span = document.createElement('span');
-      if (value !== null) {
-        span.innerText = value;
-        span.className = isInitial ? 'text-white/90' : 'text-blue-400 font-mono';
-      }
-      cell.appendChild(span);
-      cell.addEventListener('click', () => selectCell(r, c));
-      gridContainer.appendChild(cell);
-    }
-  }
-  updateProgress();
-}
-
-function selectCell(row, col) {
-  if (isGameWon || isGameOver) return;
-  selectedCell = [row, col];
-  renderGrid();
-}
-
-function setCellValue(value) {
-  if (isGameWon || isGameOver) return;
-  if (!selectedCell) return;
-  const [r, c] = selectedCell;
-  if (initialBoard[r][c] !== null) return;
-  if (board[r][c] === value) return;
-  history.push(board.map(row => [...row]));
-  if (value === null) {
-    board[r][c] = null;
-    renderGrid();
-    // Do not advance on clear
-    return;
-  }
-  if (value === solvedBoard[r][c]) {
-    board[r][c] = value;
-    renderGrid();
-    checkWin();
-    // Only advance if the game is not won
-    if (!isGameWon) {
-      moveToNextEmptyCell();
-    }
-  } else {
-    handleWrongEntry(r, c, value);
-    // No advance on wrong entry
-  }
-}
-
-// ---------- Keyboard Support ----------
-function handleKeydown(e) {
-  if (isGameWon || isGameOver) return;
-  if (e.key >= '1' && e.key <= '9') {
-    setCellValue(parseInt(e.key));
-  } else if (e.key === 'Backspace' || e.key === 'Delete') {
-    setCellValue(null);
-  } else if (selectedCell) {
-    let [r, c] = selectedCell;
-    if (e.key === 'ArrowUp') r = Math.max(0, r-1);
-    if (e.key === 'ArrowDown') r = Math.min(8, r+1);
-    if (e.key === 'ArrowLeft') c = Math.max(0, c-1);
-    if (e.key === 'ArrowRight') c = Math.min(8, c+1);
-    selectedCell = [r, c];
-    renderGrid();
-  }
 }
 
 // ---------- Initialization ----------
@@ -435,12 +308,34 @@ window.onload = async () => {
   settings.timer = urlParams.get('timer') !== 'false';
   settings.mistakes = urlParams.get('mistakes') !== 'false';
 
-  difficultyBadge.innerText = difficulty;
-  difficultyBadge.className = `px-2 md:px-5 py-1 rounded-full border text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.3em] ${
-    difficulty === 'easy' ? 'border-green-500/30 text-green-400' :
-    difficulty === 'medium' ? 'border-blue-500/30 text-blue-400' :
-    'border-red-500/30 text-red-400'
-  }`;
+  if (difficultyBadge) {
+    difficultyBadge.innerText = difficulty;
+    difficultyBadge.className = `px-2 md:px-5 py-1 rounded-full border text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.3em] ${
+      difficulty === 'easy' ? 'border-green-500/30 text-green-400' :
+      difficulty === 'medium' ? 'border-blue-500/30 text-blue-400' :
+      'border-red-500/30 text-red-400'
+    }`;
+  }
+
+  // Initialize unified SudokuBoard
+  sudokuBoard = new SudokuBoard({
+    container: gridContainer,
+    mode: 'classic',
+    onValueChange: () => {
+      updateProgress();
+      checkWin();
+    },
+    onWrongEntry: (row, col, value, expectedValue) => {
+      if (!settings.mistakes) {
+        // returning false tells the board to skip flashing animation
+        return false;
+      }
+      mistakes++;
+      updateMistakesUI();
+      showWarningMessage(`Wrong! The correct number for (${row+1},${col+1}) is ${expectedValue}.`, 2500);
+      return true;
+    }
+  });
 
   if (mode === 'custom') {
     const stored = localStorage.getItem('customBoard');
@@ -456,21 +351,22 @@ window.onload = async () => {
         const solveData = await solveRes.json();
         if (solveData.board) {
           const solvedBoardData = solveData.board;
-          solvedBoard = solvedBoardData.map(row => row.map(v => v === 0 ? null : v));
-          board = customBoard;
-          initialBoard = Array(9).fill().map(() => Array(9).fill(null));
-          history = [];
+          
+          isGameWon = false;
+          isGameOver = false;
           mistakes = 0;
           hintsUsed = 0;
           timerSeconds = 0;
-          isGameWon = false;
-          isGameOver = false;
+          
+          sudokuBoard.isReadOnly = false;
+          sudokuBoard.setBoardData(customBoard, null, solvedBoardData);
+          
           updateMistakesUI();
           updateHintsUI();
           updateProgress();
-          timerDisplay.innerText = formatTime(0);
+          if (timerDisplay) timerDisplay.innerText = formatTime(0);
           if (settings.timer) startTimer();
-          renderGrid();
+          
           aiMessageDiv.innerHTML = "Custom board loaded. Solve it yourself or use AI hint.";
           localStorage.removeItem('customBoard');
         } else {
@@ -492,37 +388,37 @@ window.onload = async () => {
     await fetchNewGame(difficulty);
   }
 
-  window.addEventListener('keydown', handleKeydown);
-
-  menuBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to leave the game? Your progress will be lost.')) {
-        window.location.href = '/';
-      }
-    });
-  
+  // Setup Num Pad click event listeners
   const numPad = document.getElementById('num-pad');
   if (numPad) {
+    numPad.innerHTML = ''; // Clear existing hardcoded or dynamic buttons
     for (let i = 1; i <= 9; i++) {
       const btn = document.createElement('button');
       btn.innerText = i;
       btn.className = 'aspect-square rounded-xl bg-white/5 flex items-center justify-center text-xl font-black hover:bg-blue-600 transition-all';
-      btn.addEventListener('click', () => setCellValue(i));
+      btn.addEventListener('click', () => sudokuBoard.setCellValue(i));
       numPad.appendChild(btn);
     }
     const clearBtn = document.createElement('button');
     clearBtn.innerText = 'C';
     clearBtn.className = 'col-span-2 rounded-xl bg-white/10 flex items-center justify-center text-sm font-black hover:bg-red-600/50 transition-all py-3';
-    clearBtn.addEventListener('click', () => setCellValue(null));
+    clearBtn.addEventListener('click', () => sudokuBoard.setCellValue(null));
     numPad.appendChild(clearBtn);
-    numPad.classList.add('grid-cols-5');
   }
-  
-  aiHintBtn.addEventListener('click', getAIHint);
-  autoSolveBtn.addEventListener('click', autoSolve);
-  undoBtn.addEventListener('click', undo);
-  resetBtn.addEventListener('click', resetGame);
-  stepBtn.addEventListener('click', stepSolve);
-  menuBtn.addEventListener('click', () => window.location.href = '/');
-  winHomeBtn.addEventListener('click', () => window.location.href = '/');
-  gameOverHomeBtn.addEventListener('click', () => window.location.href = '/');
+
+  // Bind Buttons
+  if (aiHintBtn) aiHintBtn.addEventListener('click', getAIHint);
+  if (autoSolveBtn) autoSolveBtn.addEventListener('click', autoSolve);
+  if (undoBtn) undoBtn.addEventListener('click', undo);
+  if (resetBtn) resetBtn.addEventListener('click', resetGame);
+  if (stepBtn) stepBtn.addEventListener('click', stepSolve);
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to leave the game? Your progress will be lost.')) {
+        window.location.href = '/';
+      }
+    });
+  }
+  if (winHomeBtn) winHomeBtn.addEventListener('click', () => window.location.href = '/');
+  if (gameOverHomeBtn) gameOverHomeBtn.addEventListener('click', () => window.location.href = '/');
 };
