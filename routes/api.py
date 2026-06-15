@@ -111,10 +111,11 @@ def versus_finish():
 @api_bp.route("/api/versus/state", methods=['GET'])
 def versus_state():
     game_id = request.args.get('game_id')
+    player = request.args.get('player', '1')
     if not game_id:
         return jsonify({'error': 'Missing game_id'}), 400
     
-    state = versus_manager.get_game_state(game_id)
+    state = versus_manager.get_game_state(game_id, player)
     if not state:
         return jsonify({'error': 'Game not found'}), 404
         

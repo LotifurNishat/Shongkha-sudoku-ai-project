@@ -211,7 +211,7 @@ function showWinnerModal(data) {
 }
 
 async function loadGameState() {
-  const res = await fetch(`/api/versus/state?game_id=${gameId}`);
+  const res = await fetch(`/api/versus/state?game_id=${gameId}&player=${player}`);
   const data = await res.json();
   const currentTurn = data.current_player;
   const isMyTurn = (currentTurn == player);

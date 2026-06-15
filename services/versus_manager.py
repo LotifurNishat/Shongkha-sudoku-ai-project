@@ -6,15 +6,21 @@ class VersusManager:
         self.versus_games = {}
 
     def start_game(self, player1_name, player2_name, difficulty="medium"):
-        # Generate the shared puzzle
-        solved = generate_full_board()
-        puzzle = remove_numbers(solved, difficulty)
+        # Generate separate puzzles with the same difficulty so each player
+        # solves an independent board without seeing the other player's solution.
+        player1_solved = generate_full_board()
+        player1_puzzle = remove_numbers(player1_solved, difficulty)
+
+        player2_solved = generate_full_board()
+        player2_puzzle = remove_numbers(player2_solved, difficulty)
         
         game_id = str(uuid.uuid4())
         self.versus_games[game_id] = {
             'difficulty': difficulty,
-            'initial': puzzle,
-            'solved': solved,
+            'player1_initial': player1_puzzle,
+            'player1_solved': player1_solved,
+            'player2_initial': player2_puzzle,
+            'player2_solved': player2_solved,
             'player1': {'name': player1_name, 'time': None, 'hints': 0, 'mistakes': 0, 'finished': False},
             'player2': {'name': player2_name, 'time': None, 'hints': 0, 'mistakes': 0, 'finished': False},
             'current_player': 1
@@ -66,15 +72,16 @@ class VersusManager:
         game[player_key]['finished'] = True
         
         if game['player1']['finished'] and game['player2']['finished']:
-            # Count fixed cells (non-zero in initial board)
-            fixed_cells_count = sum(1 for row in game['initial'] for cell in row if cell != 0)
+            # Count fixed cells separately for each player's board.
+            fixed_cells_count_p1 = sum(1 for row in game['player1_initial'] for cell in row if cell != 0)
+            fixed_cells_count_p2 = sum(1 for row in game['player2_initial'] for cell in row if cell != 0)
             
             score1 = self.calculate_score(
                 game['player1']['time'],
                 game['player1']['hints'],
                 game['player1']['mistakes'],
                 game['player1']['empty_cells'],
-                fixed_cells_count
+                fixed_cells_count_p1
             )
             
             score2 = self.calculate_score(
@@ -82,7 +89,7 @@ class VersusManager:
                 game['player2']['hints'],
                 game['player2']['mistakes'],
                 game['player2']['empty_cells'],
-                fixed_cells_count
+                fixed_cells_count_p2
             )
             
             winner = 1 if score1 <= score2 else 2
@@ -109,12 +116,15 @@ class VersusManager:
             game['current_player'] = 2 if player == '1' else 1
             return {'next_player': game['current_player']}
 
-    def get_game_state(self, game_id):
+    def get_game_state(self, game_id, player=1):
         game = self.get_game(game_id)
         if not game:
             return None
+
+        player = int(player) if str(player) in ('1', '2') else 1
         
-        fixed_cells_count = sum(1 for row in game['initial'] for cell in row if cell != 0)
+        fixed_cells_count_p1 = sum(1 for row in game['player1_initial'] for cell in row if cell != 0)
+        fixed_cells_count_p2 = sum(1 for row in game['player2_initial'] for cell in row if cell != 0)
         
         player1_score = None
         if game['player1']['finished']:
@@ -123,7 +133,7 @@ class VersusManager:
                 game['player1']['hints'],
                 game['player1']['mistakes'],
                 game['player1'].get('empty_cells', 81),
-                fixed_cells_count
+                fixed_cells_count_p1
             )
             
         player2_score = None
@@ -133,12 +143,17 @@ class VersusManager:
                 game['player2']['hints'],
                 game['player2']['mistakes'],
                 game['player2'].get('empty_cells', 81),
-                fixed_cells_count
+                fixed_cells_count_p2
             )
+
+        requested_player_initial = game['player1_initial'] if player == 1 else game['player2_initial']
+        requested_player_solved = game['player1_solved'] if player == 1 else game['player2_solved']
             
         return {
-            'initial': game['initial'],
-            'solved': game['solved'],
+            'initial': requested_player_initial,
+            'solved': requested_player_solved,
+            'player1_initial': game['player1_initial'],
+            'player2_initial': game['player2_initial'],
             'current_player': game['current_player'],
             'player1_finished': game['player1']['finished'],
             'player2_finished': game['player2']['finished'],
